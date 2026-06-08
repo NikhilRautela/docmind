@@ -1,8 +1,12 @@
-const { OpenAIEmbeddings } = require("@langchain/openai");
-const { OpenAI } = require("openai");
+const { HuggingFaceInferenceEmbeddings } = require("@langchain/community/embeddings/hf");
+const Groq = require("groq-sdk");
 const pool = require("../db");
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: process.env.HUGGINGFACE_API_KEY,
+  model: "sentence-transformers/all-MiniLM-L6-v2",
+});
 
 const chatWithDocument = async (req, res) => {
   try {
@@ -11,13 +15,8 @@ const chatWithDocument = async (req, res) => {
     if (!question || !documentId)
       return res.status(400).json({ error: "question and documentId are required" });
 
-    // Convert question to embedding
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-    });
     const questionEmbedding = await embeddings.embedQuery(question);
 
-    // Find most similar chunks from DB
     const result = await pool.query(
       `SELECT content FROM embeddings
        WHERE document_id = $1
@@ -28,9 +27,8 @@ const chatWithDocument = async (req, res) => {
 
     const context = result.rows.map((r) => r.content).join("\n\n");
 
-    // Ask OpenAI with context
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",

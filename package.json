@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@langchain/nomic": "^1.0.1",
+    "@nomic-ai/atlas": "^0.12.0"
+  }
+}

@@ -1,27 +1,25 @@
 const { PDFLoader } = require("@langchain/community/document_loaders/fs/pdf");
-const { OpenAIEmbeddings } = require("@langchain/openai");
+const { HuggingFaceInferenceEmbeddings } = require("@langchain/community/embeddings/hf");
 const pool = require("../db");
+
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: process.env.HUGGINGFACE_API_KEY,
+  model: "sentence-transformers/all-MiniLM-L6-v2",
+});
 
 const uploadDocument = async (req, res) => {
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ error: "No file uploaded" });
 
-    // Load and split PDF into chunks
     const loader = new PDFLoader(file.path);
     const docs = await loader.load();
 
-    // Save document record to DB
     const docResult = await pool.query(
       "INSERT INTO documents (filename) VALUES ($1) RETURNING id",
       [file.originalname]
     );
     const documentId = docResult.rows[0].id;
-
-    // Generate embeddings and save
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-    });
 
     for (const doc of docs) {
       const embedding = await embeddings.embedQuery(doc.pageContent);
