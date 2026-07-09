@@ -1,10 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const fs = require("fs");
 
 dotenv.config();
 
 const app = express();
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 app.use(cors());
 app.use(express.json());

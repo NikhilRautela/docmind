@@ -14,7 +14,7 @@ function Upload({ setDocumentId }) {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("https://docmind-backend-spww.onrender.com", {
+      const res = await fetch("https://docmind-backend-spww.onrender.com/api/upload", {
         method: "POST",
         body: formData,
       });
